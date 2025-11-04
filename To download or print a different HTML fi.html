@@ -1,0 +1,62 @@
+To download or print a different HTML file as the receipt instead of the current invoice.html, you can dynamically fetch that other HTML file (for example, receipt.html), render its content to a hidden container, and then use html2pdf or window.print() on that content. Here’s how you can adjust your JavaScript:
+
+<!-- Hidden container for fetched receipt -->
+<div id="receiptContent" style="display:none;"></div>
+
+<script>
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.textContent = 'Generating PDF...';
+        btn.disabled = true;
+
+        // Fetch the new receipt HTML file
+        fetch('receipt.html')
+            .then(response => response.text())
+            .then(html => {
+                // Place it inside hidden container
+                const receiptContainer = document.getElementById('receiptContent');
+                receiptContainer.innerHTML = html;
+
+                // Generate PDF from the other file
+                const opt = {
+                    margin: 0,
+                    filename: 'Apple_Receipt_' + Date.now() + '.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(receiptContainer).save().then(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }).catch(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                });
+            });
+    });
+
+    // For printing the other file
+    function printOtherReceipt() {
+        fetch('receipt.html')
+            .then(response => response.text())
+            .then(html => {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(html);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            });
+    }
+</script>
+
+	•	Download PDF: Fetches receipt.html, injects it into a hidden div, and then converts that to PDF.
+	•	Print Receipt: Opens the receipt.html in a new tab and triggers the browser’s print() dialog.
+
+Replace 'receipt.html' with the actual file you want to use as the separate receipt.
